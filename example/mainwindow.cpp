@@ -30,7 +30,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 void MainWindow::loadPage()
 {
-    ui->webView->load(QUrl(ui->lineEdit->text()));
+    ui->webView->load(ui->lineEdit->text());
 }
 
 void MainWindow::processCustomReply(NetworkReplyProxy *proxy)

@@ -29,6 +29,8 @@
 #include <QNetworkReply>
 #include <QUrl>
 
+class NetworkReplyProxyPrivate;
+
 class NetworkReplyProxy : public QNetworkReply {
     Q_OBJECT
 public:
@@ -38,36 +40,13 @@ public:
     virtual qint64 readData(char* data, qint64 maxlen);
 
     // Virtual declarations
-    void abort()
-    {
-        m_reply->abort();
-    }
+    void abort();
+    void close();
+    bool isSequential() const;
 
-    void close()
-    {
-        m_reply->close();
-    }
-
-    bool isSequential() const
-    {
-        return m_reply->isSequential();
-    }
-
-    void setReadBufferSize(qint64 size)
-    {
-        QNetworkReply::setReadBufferSize(size); m_reply->setReadBufferSize(size);
-    }
-
-    // QIODevice proxy
-    virtual qint64 bytesAvailable() const
-    {
-        return m_buffer.size() + QIODevice::bytesAvailable();
-    }
-
-    virtual qint64 bytesToWrite() const
-    {
-        return -1;
-    }
+    void setReadBufferSize(qint64 size);
+    virtual qint64 bytesAvailable() const;
+    virtual qint64 bytesToWrite() const;
 
     virtual bool canReadLine() const
     {
@@ -92,30 +71,19 @@ signals:
 
 public slots:
     void applyMetaData();
+    void ignoreSslErrors();
+    void errorInternal(QNetworkReply::NetworkError _error);
+    void readInternal();
 
-    void ignoreSslErrors()
-    {
-        m_reply->ignoreSslErrors();
-    }
-
-    void errorInternal(QNetworkReply::NetworkError _error)
-    {
-        setError(_error, errorString());
-        emit error(_error);
-    }
-
-    void readInternal()
-    {
-        QByteArray data = m_reply->readAll();
-        m_data += data;
-        m_buffer += data;
-        emit readyRead();
-    }
+protected:
+    NetworkReplyProxyPrivate * const d_ptr;
 
 private slots:
     void writeDataFake();
 
 private:
+    Q_DECLARE_PRIVATE(NetworkReplyProxy)
+
     QNetworkReply* m_reply;
     QByteArray m_data;
     QByteArray m_buffer;
